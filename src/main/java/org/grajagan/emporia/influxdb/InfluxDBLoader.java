@@ -57,6 +57,7 @@ public class InfluxDBLoader {
     private final String influxDbBucket;
     private final String influxDbToken;
     private final String measurementName;
+    private final boolean outputLineProtocol;
 
     private InfluxDBClient influxDBclient;
 
@@ -131,7 +132,7 @@ public class InfluxDBLoader {
     }
 
     public void save(Readings readings) {
-        if (!isConnected) {
+        if (!isConnected && !outputLineProtocol) {
             connect();
         }
 
@@ -163,15 +164,19 @@ public class InfluxDBLoader {
             }
 
             point.time(i.toEpochMilli(), WritePrecision.MS)
-                    .addField("watts", (int) (data.get(i) * multiplier * 100) / 100.0);
+                    .addField("watts", data.get(i) * multiplier);
 
             log.debug("Created point: " + point.toLineProtocol());
             points.add(point);
         }
 
-        influxDBclient.getWriteApi().writePoints(points);
-        influxDBclient.getWriteApi().flush();
-        writesCount += points.size();
+        if (outputLineProtocol) {
+            points.forEach(point -> System.out.println(point.toLineProtocol()));
+        } else {
+            influxDBclient.getWriteApi().writePoints(points);
+            influxDBclient.getWriteApi().flush();
+            writesCount += points.size();
+        }
     }
 
     private String getNameForChannel(Channel channel) {

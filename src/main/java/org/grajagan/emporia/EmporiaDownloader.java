@@ -70,6 +70,7 @@ public class EmporiaDownloader {
     private static final String INFLUX_TOKEN = "influx-token";
     private static final String INFLUX_MEASUREMENT_NAME = "influx-measurement";
     private static final String DISABLE_INFLUX = "disable-influx";
+    private static final String INFLUX_LINE_PROTOCOL = "influx-line-protocol";
 
     static final String HISTORY = "history";
 
@@ -116,7 +117,7 @@ public class EmporiaDownloader {
             System.exit(0);
         }
 
-        if (!options.has(DISABLE_INFLUX)) {
+        if (!options.has(DISABLE_INFLUX) && !options.has(INFLUX_LINE_PROTOCOL)) {
             REQUIRED_PARAMETERS.add(INFLUX_URL);
             REQUIRED_PARAMETERS.add(INFLUX_BUCKET);
             REQUIRED_PARAMETERS.add(INFLUX_PORT);
@@ -185,6 +186,7 @@ public class EmporiaDownloader {
                         "InfluxDB measurement name\nIf left empty, measurements will be saved "
                                 + "by channel.").withRequiredArg().ofType(String.class);
                 accepts(DISABLE_INFLUX, "disable the uploading to InfluxDB");
+                accepts(INFLUX_LINE_PROTOCOL, "output InfluxDB line protocol");
 
                 accepts(LoggingConfigurator.RAW, "output raw JSON readings to STDOUT");
 
@@ -315,7 +317,10 @@ public class EmporiaDownloader {
         }
 
         InfluxDBLoader influxDBLoader = null;
-        if (!configuration.getBoolean(DISABLE_INFLUX, false)) {
+        if (configuration.getBoolean(INFLUX_LINE_PROTOCOL, false)) {
+            influxDBLoader = new InfluxDBLoader(null, null, null, null,
+                    configuration.getString(INFLUX_MEASUREMENT_NAME), true);
+        } else if (!configuration.getBoolean(DISABLE_INFLUX, false)) {
             URI influxDbUri = null;
             try {
                 influxDbUri = new URI((String) configuration.getString(INFLUX_URL));
@@ -326,7 +331,8 @@ public class EmporiaDownloader {
                         configuration.getString(INFLUX_ORG),
                         configuration.getString(INFLUX_BUCKET),
                         configuration.getString(INFLUX_TOKEN),
-                        configuration.getString(INFLUX_MEASUREMENT_NAME));
+                        configuration.getString(INFLUX_MEASUREMENT_NAME),
+                        false);
             } catch (Exception e) {
                 log.error("Cannot instantiate InfluxDBLoader", e);
             }
@@ -400,6 +406,8 @@ public class EmporiaDownloader {
         Instant start;
         Scale scale = (Scale) configuration.getProperty(EmporiaAPIService.SCALE);
         for (Channel channel : device.getChannels()) {
+            // TODO: Channel filter to skip empty channels and save some calls and time
+
             if (lastDataPoint.containsKey(channel)) {
                 start = lastDataPoint.get(channel);
             } else {
