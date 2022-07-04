@@ -32,6 +32,8 @@ import lombok.ToString;
 @ToString
 @JsonPOJOBuilder(withPrefix = "")
 public class Channel {
+    public static String ALL_CHANNELS_NUM = "1,2,3";
+
     private Integer deviceGid;
     private String name;
     private String channelNum;

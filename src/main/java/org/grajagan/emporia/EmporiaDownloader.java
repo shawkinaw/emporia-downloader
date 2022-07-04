@@ -406,7 +406,11 @@ public class EmporiaDownloader {
         Instant start;
         Scale scale = (Scale) configuration.getProperty(EmporiaAPIService.SCALE);
         for (Channel channel : device.getChannels()) {
-            // TODO: Channel filter to skip empty channels and save some calls and time
+            if (channel.getName() == null && !Channel.ALL_CHANNELS_NUM.equals(channel.getChannelNum())) {
+                log.debug("Skipping channel {} for device {} due to null name",
+                        channel.getChannelNum(), channel.getDeviceGid());
+                continue;
+            }
 
             if (lastDataPoint.containsKey(channel)) {
                 start = lastDataPoint.get(channel);
