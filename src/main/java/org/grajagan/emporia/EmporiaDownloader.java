@@ -38,6 +38,7 @@ import org.grajagan.emporia.model.Customer;
 import org.grajagan.emporia.model.Device;
 import org.grajagan.emporia.model.Readings;
 import org.grajagan.emporia.model.Scale;
+import pt.davidafsilva.apple.OSXKeychain;
 
 import java.io.File;
 import java.io.IOException;
@@ -123,12 +124,26 @@ public class EmporiaDownloader {
             REQUIRED_PARAMETERS.add(INFLUX_PORT);
         }
 
+        if (options.has(EmporiaAPIService.APPLE_KEYCHAIN)) {
+            REQUIRED_PARAMETERS.remove(EmporiaAPIService.PASSWORD);
+        }
+
         Configuration configuration = null;
         try {
             configuration = getConfiguration(options);
         } catch (ConfigurationException e) {
             printHelp(parser);
             System.exit(1);
+        }
+
+        if (configuration.getBoolean(EmporiaAPIService.APPLE_KEYCHAIN_SAVE_PASSWORD, false)) {
+            OSXKeychain keychain = OSXKeychain.getInstance();
+            String userName = configuration.getString(EmporiaAPIService.USERNAME);
+            log.info("Saving password for account {} to keychain", userName);
+
+            keychain.addGenericPassword(EmporiaAPIService.KEYCHAIN_APPLICATION,
+                    userName, configuration.getString(EmporiaAPIService.PASSWORD));
+            return;
         }
 
         LoggingConfigurator.configure(configuration);
@@ -172,6 +187,9 @@ public class EmporiaDownloader {
                         .ofType(String.class);
                 accepts(EmporiaAPIService.PASSWORD, "password").withRequiredArg()
                         .ofType(String.class);
+
+                accepts(EmporiaAPIService.APPLE_KEYCHAIN_SAVE_PASSWORD, "save the provided password to keychain and quit");
+                accepts(EmporiaAPIService.APPLE_KEYCHAIN, "use keychain to load password");
 
                 accepts(INFLUX_URL, "InfluxDB server URL").withRequiredArg().ofType(String.class)
                         .defaultsTo(DEFAULT_INFLUX_URL);

@@ -33,6 +33,8 @@ import org.grajagan.emporia.model.Channel;
 import org.grajagan.emporia.model.Customer;
 import org.grajagan.emporia.model.Readings;
 import org.grajagan.emporia.model.Scale;
+import pt.davidafsilva.apple.OSXKeychain;
+import pt.davidafsilva.apple.OSXKeychainException;
 import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
@@ -53,6 +55,10 @@ public class EmporiaAPIService {
     public static final int DEFAULT_WAIT_BETWEEN_REQUESTS = 30;
     public static final String WAIT_BETWEEN_REQUESTS = "wait-between-requests";
 
+    public static final String APPLE_KEYCHAIN_SAVE_PASSWORD = "apple-keychain-save-password";
+    public static final String APPLE_KEYCHAIN = "apple-keychain";
+    public static final String KEYCHAIN_APPLICATION = "emporia-downloader";
+
     private static Instant lastAccess;
 
     private final EmporiaAPI emporiaAPI;
@@ -64,7 +70,7 @@ public class EmporiaAPIService {
     public EmporiaAPIService(Configuration configuration) {
         CognitoAuthenticationManager authenticationManager =
                 CognitoAuthenticationManager.builder().username(configuration.getString(USERNAME))
-                        .password(configuration.getString(PASSWORD)).build();
+                        .password(getPassword(configuration)).build();
 
         OkHttpClient.Builder builder = new OkHttpClient.Builder()
                 .callTimeout(2, TimeUnit.MINUTES)
@@ -146,6 +152,23 @@ public class EmporiaAPIService {
             log.error("Cannot get readings!", e);
         }
         return readings;
+    }
+
+    private String getPassword(Configuration configuration) {
+        if (configuration.getBoolean(APPLE_KEYCHAIN, false)) {
+            try {
+                String userName = configuration.getString(USERNAME);
+                log.info("Retrieving password for account {} from keychain", userName);
+                OSXKeychain keychain = OSXKeychain.getInstance();
+                return keychain.findGenericPassword(KEYCHAIN_APPLICATION, userName)
+                        .orElseThrow(() -> new RuntimeException("Password not found for username"));
+            } catch (OSXKeychainException e) {
+                log.error("Error accessing password in keychain", e);
+                throw new RuntimeException("Unable to load password from keychain", e);
+            }
+        } else {
+            return configuration.getString(PASSWORD);
+        }
     }
 
     private void waitBetweenCalls() {
