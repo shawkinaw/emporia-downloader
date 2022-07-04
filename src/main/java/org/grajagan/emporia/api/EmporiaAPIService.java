@@ -50,14 +50,16 @@ public class EmporiaAPIService {
     public static final String SCALE    = "scale";
     public static final String MAINTENANCE_URL = "http://s3.amazonaws.com/"
             + "com.emporiaenergy.manual.ota/maintenance/maintenance.json";
+    public static final int DEFAULT_WAIT_BETWEEN_REQUESTS = 30;
+    public static final String WAIT_BETWEEN_REQUESTS = "wait-between-requests";
 
-    private static final int WAIT_SECONDS_BETWEEN_REQUESTS = 30;
     private static Instant lastAccess;
 
     private final EmporiaAPI emporiaAPI;
     private final String username;
     private final OkHttpClient simpleClient;
     private final Scale scale;
+    private final int waitSecondsBetweenRequests;
 
     public EmporiaAPIService(Configuration configuration) {
         CognitoAuthenticationManager authenticationManager =
@@ -87,6 +89,8 @@ public class EmporiaAPIService {
         username = configuration.getString(USERNAME);
         scale = (Scale) configuration.getProperty(SCALE);
         Readings.setScale(scale);
+
+        waitSecondsBetweenRequests = configuration.getInt(WAIT_BETWEEN_REQUESTS);
     }
 
     public boolean isDownForMaintenance() {
@@ -151,7 +155,7 @@ public class EmporiaAPIService {
         }
 
         long secsSinceLastRequest = Instant.now().getEpochSecond() - lastAccess.getEpochSecond();
-        long secsWeNeedToWait = WAIT_SECONDS_BETWEEN_REQUESTS - secsSinceLastRequest;
+        long secsWeNeedToWait = waitSecondsBetweenRequests - secsSinceLastRequest;
 
         if (secsWeNeedToWait > 0) {
             log.debug("Waiting " + secsWeNeedToWait + "s between calls!");

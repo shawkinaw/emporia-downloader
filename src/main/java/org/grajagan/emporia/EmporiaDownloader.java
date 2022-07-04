@@ -187,6 +187,8 @@ public class EmporiaDownloader {
                                 + "by channel.").withRequiredArg().ofType(String.class);
                 accepts(DISABLE_INFLUX, "disable the uploading to InfluxDB");
                 accepts(INFLUX_LINE_PROTOCOL, "output InfluxDB line protocol");
+                accepts(EmporiaAPIService.WAIT_BETWEEN_REQUESTS, "wait time between requests to Emporia in seconds, defaults to 30")
+                        .withRequiredArg().ofType(Integer.class).defaultsTo(EmporiaAPIService.DEFAULT_WAIT_BETWEEN_REQUESTS);
 
                 accepts(LoggingConfigurator.RAW, "output raw JSON readings to STDOUT");
 
