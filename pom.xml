@@ -14,25 +14,25 @@
         </license>
     </licenses>
     <organization>
-        <name>Helge Weissig</name>
-        <url>https://github.com/helgew/emporia-downloader</url>
+        <name>David Wells</name>
+        <url>https://github.com/shawkinaw/emporia-downloader</url>
     </organization>
     <developers>
         <developer>
-            <id>helgew</id>
-            <name>Helge Weissig</name>
-            <email>helgew@grajagan.org</email>
+            <id>shawkinaw</id>
+            <name>David Wells</name>
+            <email>shawkinaw@gmail.com</email>
         </developer>
     </developers>
     <scm>
-        <developerConnection>scm:git:git@github.com:helgew/emporia-downloader.git</developerConnection>
-        <connection>scm:git:https://github.com/helgew/emporia-downloader.git</connection>
-        <url>https://github.com/helgew/emporia-downloader.git</url>
+        <developerConnection>scm:git:git@github.com:shawkinaw/emporia-downloader.git</developerConnection>
+        <connection>scm:git:https://github.com/shawkinaw/emporia-downloader.git</connection>
+        <url>https://github.com/shawkinaw/emporia-downloader.git</url>
       <tag>HEAD</tag>
   </scm>
     <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/helgew/emporia-downloader/issues</url>
+        <url>https://github.com/shawkinaw/emporia-downloader/issues</url>
     </issueManagement>
 
     <inceptionYear>2002</inceptionYear>
@@ -329,6 +329,7 @@
                 <artifactId>maven-release-plugin</artifactId>
                 <configuration>
                     <scmReleaseCommitComment>Release Commit for @{releaseLabel}</scmReleaseCommitComment>
+                    <pushChanges>false</pushChanges>
                 </configuration>
             </plugin>
         </plugins>
